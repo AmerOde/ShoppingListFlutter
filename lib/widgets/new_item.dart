@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shopping_list_app_flutter/data/category.dart';
 import 'package:shopping_list_app_flutter/model/categories.dart';
 import 'package:shopping_list_app_flutter/widgets/grocery_list.dart';
+import 'package:http/http.dart' as http;
 
 import '../model/grocery_item.dart';
+import 'dart:convert';
 
 class NewItemState extends StatefulWidget {
   const NewItemState({super.key});
@@ -22,11 +24,35 @@ class _NewItemState extends State<NewItemState> {
   var _selectedCategory = categories[Categories.vegetables]!;
 
 
-  void _saveItem() {
+  void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      final url = Uri.https("flutter-prep-cafcb-default-rtdb.firebaseio.com",
+          "shopping-list.json");
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'name': _enteredName,
+          'quantity': double.parse(_enteredQuantity.toString()),
+          'category': _selectedCategory.title, // أو أي قيمة تريد إرسالها
+        }),
+      );
 
-      Navigator.of(context).pop(GroceryItem(id: DateTime.now().toString(),name: _enteredName,quantity: double.parse(_enteredQuantity.toString()),category: _selectedCategory));
+
+        print(response.body);
+        print(response.statusCode);
+        if(!context.mounted){
+          return;
+      }
+
+        Navigator.pop(context);
+      // Navigator.of(context).pop(GroceryItem(id: DateTime.now().toString(),
+      //     name: _enteredName,
+      //     quantity: double.parse(_enteredQuantity.toString()),
+      //     category: _selectedCategory));
     }
   }
 
@@ -74,8 +100,8 @@ class _NewItemState extends State<NewItemState> {
                       keyboardType: TextInputType.number,
                       initialValue: '1',
 
-                      onSaved: (value){
-                        _enteredQuantity =int.parse(value!);
+                      onSaved: (value) {
+                        _enteredQuantity = int.parse(value!);
                       },
                       validator: (value) {
                         if (value == null ||
