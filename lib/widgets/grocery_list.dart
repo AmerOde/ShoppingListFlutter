@@ -19,6 +19,7 @@ class _GroceryListState extends State<GroceryList> {
   List<GroceryItem> _loadedItems = [];
   bool _isLoading = true;
 
+  String ?_error;
   @override
   void initState() {
     // TODO: implement initState
@@ -38,6 +39,11 @@ class _GroceryListState extends State<GroceryList> {
 
     final response = await http.get(url);
 
+    if(response.statusCode>400){
+      setState(() {
+        _error = " Failed to fetch data . Please try again later .";
+      });
+    }
     final data = json.decode(response.body);
     await Future.delayed(const Duration(seconds: 1)); // للتجربة فقط
 
@@ -131,7 +137,9 @@ class _GroceryListState extends State<GroceryList> {
         ),
       );
     }
-
+      if(_error!=null){
+        content = Center(child: Text(_error!),);
+      }
     return Scaffold(
       appBar: AppBar(
         title: const Text("Your Groceries"),
